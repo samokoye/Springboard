@@ -118,11 +118,52 @@ Order by descending cost, and do not use any subqueries. */
 
 
 #Answer:
-
+SELECT DISTINCT f.name AS facility_name, 
+CASE WHEN b.memid =0 THEN CONCAT(m.firstname) 
+ELSE CONCAT(m.firstname, ' ', m.surname) 
+END AS member_name,
+CASE WHEN b.memid = 0 THEN b.slots * f.guestcost 
+ELSE b.slots * f.membercost 
+END AS cost_per_half_hr, b.starttime AS day_of
+FROM Bookings as b
+INNER JOIN Members as m
+ON b.memid = m.memid
+INNER JOIN Facilities as f
+ON f.facid = b.facid
+WHERE DATE(b.starttime) = '2012-09-14' 
+AND b.memid = 0 or DATE(b.starttime) = '2012-09-14' 
+AND b.memid != 0 AND
+CASE WHEN b.memid = 0 THEN b.slots * f.guestcost 
+     ELSE b.slots * f.membercost
+END > 30
+ORDER BY cost_per_half_hr DESC;
 
 
 /* Q9: This time, produce the same result as in Q8, but using a subquery. */
 
+
+SELECT DISTINCT sub.name AS facility_name, 
+CASE WHEN sub.memid =0 
+THEN CONCAT(sub.firstname) 
+ELSE CONCAT(sub.firstname, ' ', sub.surname) 
+END AS member_name,
+CASE WHEN sub.memid = 0 
+THEN sub.slots * sub.guestcost 
+ELSE sub.slots * sub.membercost 
+END AS cost_per_half_hr, sub.starttime AS day_of
+FROM(SELECT b.starttime, b.facid, b.memid, b.slots, f.membercost, f.guestcost, f.name,m.firstname, m.surname
+FROM Bookings as b
+INNER JOIN Members as m
+ON b.memid = m.memid
+INNER JOIN Facilities as f
+ON f.facid = b.facid) AS sub
+WHERE DATE(sub.starttime) = '2012-09-14' 
+AND sub.memid = 0 or DATE(sub.starttime) = '2012-09-14' AND sub.memid != 0 
+AND CASE WHEN sub.memid = 0 
+THEN sub.slots * sub.guestcost 
+     ELSE sub.slots * sub.membercost
+END > 30
+ORDER BY cost_per_half_hr DESC;
 
 /* PART 2: SQLite
 
