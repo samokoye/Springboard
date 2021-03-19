@@ -96,7 +96,7 @@ Include in your output the name of the court, and the name of the member
 formatted as a single column. Ensure no duplicate data, and order by
 the member name. */
 
-Answer:
+#Answer:
 
 SELECT DISTINCT f.name AS facility_name, CONCAT(m.surname,' ',m.firstname) AS member_name, m.memid AS member_id, b.facid AS facility_id
 FROM Members As m
@@ -175,11 +175,52 @@ QUESTIONS:
 The output of facility name and total revenue, sorted by revenue. Remember
 that there's a different cost for guests and members! */
 
+/*Answer:*/
+
+query_10 = pd.read_sql_query("SELECT f.name, SUM(CASE WHEN b.memid = 0\
+                             THEN b.slots * f.guestcost ELSE b.slots * f.membercost \
+                             END) AS total_revenue\
+                             FROM Bookings AS b \
+                             INNER JOIN Facilities AS f \
+                             ON b.facid = f.facid \
+                             GROUP BY f.name \
+                             HAVING total_revenue < 1000",engine)
+query_10.head()
+
 /* Q11: Produce a report of members and who recommended them in alphabetic surname,firstname order */
 
+# Answer:
+
+Q11 = pd.read_sql_query("SELECT m.surname||', '|| m.firstname As member,\
+                             n.surname||', '|| n.firstname AS Recommedended_by \
+                             FROM Members AS m, Members AS n \
+                             WHERE m.memid= n.recommendedby AND m.recommendedby !=0 \
+                             OR n.memid= m.recommendedby AND m.recommendedby !=0 \
+                             ORDER BY m.surname;", engine) 
+Q11.head()
 
 /* Q12: Find the facilities with their usage by member, but not guests */
 
+#Answer:
+Q12 = pd.read_sql_query("SELECT f.name AS facility_name, COUNT(b.starttime) AS usage \
+FROM Bookings AS b \
+INNER JOIN Facilities AS f \
+ON b.facid = f.facid \
+WHERE b.memid !=0 \
+GROUP BY f.name", engine)
+
+Q12
 
 /* Q13: Find the facilities usage by month, but not guests */
 
+#Answer:
+Q13 = pd.read_sql_query("SELECT f.name AS facility_name,\
+(strftime('%Y-%m', starttime)) as usage_by_month, \
+COUNT(b.starttime) AS total_usage \
+FROM Bookings AS b \
+INNER JOIN Facilities AS f \
+ON b.facid = f.facid \
+WHERE b.memid !=0 \
+GROUP BY f.name, usage_by_month", engine)
+
+Q13
